@@ -29,7 +29,7 @@ const BASE_BYTES = 10;
 const INPUT_BYTES_BASE = 148;
 const OUTPUT_BYTES_BASE = 34;
 const OP_RETURN_BYTES: number = 20;
-const EXCESSIVE_FEE_LIMIT: number = 1000000; // Limit to 1/100 of a BTC for now
+const EXCESSIVE_FEE_LIMIT: number = 500000; // Limit to 1/200 of a BTC for now
 
 export enum REALM_CLAIM_TYPE {
     DIRECT = 'direct',
@@ -507,7 +507,8 @@ export class AtomicalOperationBuilder {
                     nonce++;
                 }
                 const atomPayload = new AtomicalsPayload(copiedData);
-                const updatedBaseCommit: { scriptP2TR, hashLockP2TR } = prepareCommitRevealConfig(this.options.opType, fundingKeypair, atomPayload)
+                const updatedBaseCommit: { scriptP2TR, hashLockP2TR, hashscript } = prepareCommitRevealConfig(this.options.opType, fundingKeypair, atomPayload)
+
                 let psbtStart = new Psbt({ network: networks.bitcoin });
                 psbtStart.setVersion(1);
                 psbtStart.addInput({
@@ -522,6 +523,8 @@ export class AtomicalOperationBuilder {
                     value: fees.revealFeePlusOutputs
                 });
 
+                this.addCommitChangeOutputIfRequired(fundingUtxo.value, fees, psbtStart, updatedBaseCommit.hashscript.length, fundingKeypair.address);
+
                 psbtStart.signInput(0, fundingKeypair.tweakedChildNode);
                 psbtStart.finalizeAllInputs()
                 let prelimTx = psbtStart.extractTransaction();
@@ -529,7 +532,7 @@ export class AtomicalOperationBuilder {
 
                 logMiningProgressToConsole(performBitworkForCommitTx, this.options.disableMiningChalk, checkTxid, noncesGenerated);
                 // add a `true ||` at the front to test invalid minting
-                //console.log('this.bitworkInfoCommit?.prefix', this.bitworkInfoCommit)
+                // console.log('this.bitworkInfoCommit?.prefix', this.bitworkInfoCommit)
                 if (performBitworkForCommitTx && hasValidBitwork(checkTxid, this.bitworkInfoCommit?.prefix as any, this.bitworkInfoCommit?.ext as any)) {
                     process.stdout.clearLine(0);
                     process.stdout.cursorTo(0);
@@ -538,7 +541,7 @@ export class AtomicalOperationBuilder {
                     // We found a solution, therefore broadcast it 
                     const interTx = psbtStart.extractTransaction();
                     const rawtx = interTx.toHex();
-                    //console.log('rawtx', rawtx);
+                    AtomicalOperationBuilder.finalSafetyCheckForExcessiveFee(psbtStart, interTx);
                     if (!(await this.broadcastWithRetries(rawtx))) {
                         console.log('Error sending', prelimTx.getId(), rawtx);
                         throw new Error('Unable to broadcast commit transaction after attempts: ' + prelimTx.getId());
@@ -616,7 +619,6 @@ export class AtomicalOperationBuilder {
             }
 
             if (parentAtomicalInfo) {
-                console.log('adding input', parentAtomicalInfo)
                 psbt.addInput({
                     hash: parentAtomicalInfo.parentUtxoPartial.hash,
                     index: parentAtomicalInfo.parentUtxoPartial.index,
@@ -627,7 +629,6 @@ export class AtomicalOperationBuilder {
                     address: parentAtomicalInfo.parentKeyInfo.address,
                     value: parentAtomicalInfo.parentUtxoPartial.witnessUtxo.value,
                 });
-                console.log('psbt', psbt)
             }
 
             if (noncesGenerated % 10000 == 0) {
@@ -642,7 +643,8 @@ export class AtomicalOperationBuilder {
                     value: 0,
                 })
             }
-            this.addOutputIfChangeRequired(fees);
+            this.addRevealOutputIfChangeRequired(fees);
+
             psbt.signInput(0, fundingKeypair.childNode);
             // Sign all the additional inputs, if there were any
             let signInputIndex = 1;
@@ -755,7 +757,7 @@ export class AtomicalOperationBuilder {
     }
 
 
-    getTotalInputValue(): number {
+    getTotalAdditionalInputValues(): number {
         let sum = 0;
         for (const utxo of this.inputUtxos) {
             sum += utxo.utxo.witnessUtxo.value;
@@ -763,24 +765,13 @@ export class AtomicalOperationBuilder {
         return sum;
     }
 
-    getTotalOutputValue(): number {
+    getTotalAdditionalOutputValues(): number {
         let sum = 0;
         for (const output of this.additionalOutputs) {
             sum += output.value
         }
         return sum;
     }
-
-    /*addChangeIfRequired(keyPair: KeyPairInfo) {
-        const currentFee = this.getTotalInputValue() - this.getTotalOutputValue();
-        const expectedFee = 00;
-        if (currentFee > this.getExpectedTxFee() && currentFee >= DUST_AMOUNT) {
-            this.addOutput({
-                address: keyPair.address,
-                value: currentFee > this.getExpectedTxFee() 
-            })
-        }
-    }*/
 
     calculateAmountRequiredForReveal(hashLockP2TROutputLen: number = 0): number {
         const ARGS_BYTES = 20;
@@ -836,8 +827,8 @@ export class AtomicalOperationBuilder {
      * @param fee Fee calculations
      * @returns 
      */
-    addOutputIfChangeRequired(fee: FeeCalculations) {
-        const currentSatoshisFeePlanned = this.getTotalInputValue() - this.getTotalOutputValue();
+    addRevealOutputIfChangeRequired(fee: FeeCalculations) {
+        const currentSatoshisFeePlanned = this.getTotalAdditionalInputValues() - this.getTotalAdditionalOutputValues();
         // It will be invalid, but at least we know we don't need to add change
         if (currentSatoshisFeePlanned <= 0) {
             return;
@@ -849,12 +840,55 @@ export class AtomicalOperationBuilder {
         }
         // There were some excess satoshis, but let's verify that it meets the dust threshold to make change
         if (excessSatoshisFound >= DUST_AMOUNT) {
+
             this.addOutput({
                 address: this.options.address,
                 value: excessSatoshisFound
             })
         }
     }
+
+    /**
+    * Adds an extra output at the end if it was detected there would be excess satoshis for the reveal transaction
+    * @param fee Fee calculations
+    * @returns 
+    */
+    addCommitChangeOutputIfRequired(extraInputValue: number, fee: FeeCalculations, pbst: any, hashScriptLen: number, address: string) {
+        // console.log('-----------addChangeOutputIfRequired----------');
+        // console.log('extraInputValue', extraInputValue);
+        // console.log('fee', JSON.stringify(fee, null, 2));
+        // console.log('address', address);
+        const totalInputsValue = extraInputValue + this.getTotalAdditionalInputValues();
+        const totalOutputsValue = this.getTotalAdditionalOutputValues() + fee.revealFeePlusOutputs;
+        const calculatedFee = totalInputsValue - totalOutputsValue;
+        // console.log('totalInputsValue', totalInputsValue);
+        // console.log('totalOutputsValue', totalOutputsValue);
+        // console.log('calculatedFee', calculatedFee);
+        // It will be invalid, but at least we know we don't need to add change
+        if (calculatedFee <= 0) {
+            //  console.log('calculatedFee <= 0', calculatedFee);
+            return;
+        }
+        const expectedFee = fee.commitFeeOnly;
+        // console.log('expectedFee', expectedFee);
+        const differenceBetweenCalculatedAndExpected = calculatedFee - expectedFee;
+        if (differenceBetweenCalculatedAndExpected <= 0) {
+            //  console.log('differenceBetweenCalculatedAndExpected <= 0');
+            return;
+        }
+        // console.log('differenceBetweenCalculatedAndExpected', differenceBetweenCalculatedAndExpected);
+        // console.log('excessSatoshisFound', excessSatoshisFound);
+        // There were some excess satoshis, but let's verify that it meets the dust threshold to make change
+        if (differenceBetweenCalculatedAndExpected >= DUST_AMOUNT) {
+            pbst.addOutput({
+                address: address,
+                value: differenceBetweenCalculatedAndExpected
+            })
+        }
+        // console.log('differenceBetweenCalculatedAndExpected', differenceBetweenCalculatedAndExpected);
+        // console.log('pbst', pbst);
+    }
+
     /**
      * a final safety check to ensure we don't accidentally broadcast a tx with too high of a fe
      * @param psbt Partially signed bitcoin tx coresponding to the tx to calculate the total inputs values provided

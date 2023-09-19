@@ -165,7 +165,8 @@ export const prepareCommitRevealConfig = (opType: 'nft' | 'ft' | 'dft' | 'dmt' |
     });
     return {
         scriptP2TR,
-        hashLockP2TR
+        hashLockP2TR,
+        hashscript
     }
 }
 
