@@ -30,6 +30,11 @@ function handleResultLogging(result: any) {
   }
 }
 
+function getRandomBitwork4() {
+  const r = Math.floor(1000 + Math.random() * 9000);
+  return r +'';
+}
+
 function groupAtomicalsUtxosByAtomicalId(atomical_utxos: any[]) {
   const sorted = {};
   // console.log('atomical_utxos', JSON.stringify(atomical_utxos, null, 2));
@@ -1145,7 +1150,7 @@ program.command('mint-ft')
         init: options.init,
         satsbyte: parseInt(options.satsbyte),
         container: options.container,
-        bitworkc: options.bitworkc,
+        bitworkc: options.bitworkc ? options.bitworkc : getRandomBitwork4(),
         bitworkr: options.bitworkr,
         parent: options.parent,
         parentOwner: parentOwnerRecord,
@@ -1191,7 +1196,7 @@ program.command('init-dft')
         satsbyte: parseInt(options.satsbyte),
         satsoutput: parseInt(options.satsoutput),
         container: options.container,
-        bitworkc: options.bitworkc,
+        bitworkc: options.bitworkc ? options.bitworkc : getRandomBitwork4(),
         bitworkr: options.bitworkr,
         parent: options.parent,
         parentOwner: parentOwnerRecord,
@@ -1299,7 +1304,7 @@ program.command('mint-realm')
         satsbyte: parseInt(options.satsbyte),
         satsoutput: parseInt(options.satsoutput),
         container: options.container,
-        bitworkc: options.bitworkc,
+        bitworkc: options.bitworkc ? options.bitworkc : getRandomBitwork4(),
         bitworkr: options.bitworkr,
         parent: options.parent,
         parentOwner: parentOwnerRecord,
@@ -1378,7 +1383,7 @@ program.command('mint-container')
         satsbyte: parseInt(options.satsbyte),
         satsoutput: parseInt(options.satsoutput),
         container: options.container,
-        bitworkc: options.bitworkc,
+        bitworkc: options.bitworkc ? options.bitworkc : getRandomBitwork4(),
         bitworkr: options.bitworkr,
         parent: options.parent,
         parentOwner: parentOwnerRecord,
