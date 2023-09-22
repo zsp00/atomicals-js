@@ -1174,7 +1174,7 @@ program.command('init-dft')
   .option('--init <string...>', 'Populate the \'init\' field with key value pairs or file contents')
   .option('--funding <string>', 'Use wallet alias wif key to be used for funding and change')
   .option('--satsbyte <number>', 'Satoshis per byte in fees', '20')
-  .option('--mint-bitworkc <string>', 'Whether to require any bitwork proof of work to mint. Applies to the commit transaction.')
+  .option('-m, --mint-bitworkc <string>', 'Whether to require any bitwork proof of work to mint. Applies to the commit transaction.')
   .option('--mint-bitworkr <string>', 'Whether to require any bitwork proof of work to mint. Applies to the reveal transaction.')
   .option('--bitworkc <string>', 'Whether to put any bitwork proof of work into the token mint. Applies to the commit transaction.')
   .option('--bitworkr <string>', 'Whether to put any bitwork proof of work into the token mint. Applies to the reveal transaction.')
@@ -1189,6 +1189,7 @@ program.command('init-dft')
       const atomicals = new Atomicals(config, ElectrumApi.createClient(process.env.ELECTRUMX_WSS || ''));
       let walletRecord = resolveWalletAliasNew(walletInfo, options.funding, walletInfo.funding);
       let parentOwnerRecord = resolveWalletAliasNew(walletInfo, options.parentOwner, walletInfo.primary);
+      console.log('options', options);
       const result: any = await atomicals.initDftInteractive(files, walletRecord.address, requestTicker, mintAmount, maxMints, mintHeight, options.mintBitworkc, options.mintBitworkr, walletRecord.WIF, {
         meta: options.meta,
         ctx: options.ctx,
