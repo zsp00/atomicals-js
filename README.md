@@ -9,23 +9,15 @@
 
 ## Install
 
-With npm:
 ```
-npm install atomicals
+Download the github repo and then run:
 
-...or download the github repo and then run:
-
-npm install (from inside the directory)
-
-...then build:
-
+npm install
 npm build
-
-And that's it!
 
 See all commands at:
 
-npm cli --help
+npm run cli --help
 
 ```
 
