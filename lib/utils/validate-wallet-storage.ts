@@ -6,13 +6,14 @@ bitcoin.initEccLib(ecc);
 const ECPair = ECPairFactory(ecc);
 import * as bip39 from 'bip39';
 import * as fs from 'fs';
+import * as path from 'path';
 import BIP32Factory from 'bip32';
 import { jsonFileReader } from './file-utils';
 import { toXOnly } from './create-key-pair';
 const bip32 = BIP32Factory(ecc);
 
-const WALLET_FILE = "wallet.json";
-
+const walletsPath = path.join(__dirname, '../../wallets');
+const WALLET_FILE = path.join(walletsPath, 'wallet.json')
 
 export interface IWalletRecord {
   address: string,
@@ -128,7 +129,7 @@ export const validateWalletStorage = async (): Promise<IValidatedWalletInfo> => 
     if (childNodeFunding.toWIF() !== wallet.funding.WIF) {
       throw 'funding wif does not match';
     }
-    
+
     const p2trFundingCheck = bitcoin.payments.p2tr({
       internalPubkey: toXOnly(keypairFunding.publicKey)
     });
@@ -138,7 +139,7 @@ export const validateWalletStorage = async (): Promise<IValidatedWalletInfo> => 
       console.log(m);
       throw new Error(m);
     }
- 
+
     // Now we loop over every imported wallet and validate that they are correct
     const imported = {}
     for (const prop in wallet.imported) {
@@ -151,7 +152,7 @@ export const validateWalletStorage = async (): Promise<IValidatedWalletInfo> => 
       if (importedKeypair.toWIF() !== wallet.imported[prop].WIF) {
         throw 'Imported WIF does not match';
       }
-      
+
       const p2trImported = bitcoin.payments.p2tr({
         internalPubkey: toXOnly(importedKeypair.publicKey)
       });
