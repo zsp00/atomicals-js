@@ -312,12 +312,13 @@ export const checkBaseRequestOptions = (options: any): BaseRequestOptions => {
   return options;
 }
 
-export const isValidBitworkMinimum = (biworkc: any) => {
-  if (!biworkc) {
-    throw new Error('Require at least --bitworkc with 4 hex digits or 3 ascii digits.')
+export const isValidBitworkMinimum = (bitworkc: any) => {
+  if (!bitworkc) {
+    throw new Error('Require at least 4 hex digits or 3 ascii digits for any bitwork.')
   }
-  const bitworkInfoCommit = isValidBitworkString(biworkc);
+  const bitworkInfoCommit = isValidBitworkString(bitworkc);
   if (bitworkInfoCommit?.prefix && bitworkInfoCommit?.prefix.length < 4) {
+    console.log('bitworkInfoCommit', bitworkInfoCommit);
     throw new Error('Require at least --bitworkc with 4 hex digits or 3 ascii digits.')
   }
 }
