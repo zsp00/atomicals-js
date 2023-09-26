@@ -3,7 +3,7 @@ import { decorateAtomical } from "../utils/atomical-format-helpers";
 import { CommandInterface } from "./command.interface";
 
 export class GetGlobalCommand implements CommandInterface {
-  constructor( private electrumApi: ElectrumApiInterface, private hashes: number,) {
+  constructor( private electrumApi: ElectrumApiInterface, private hashes: number) {
   }
 
   async run(): Promise<any> {

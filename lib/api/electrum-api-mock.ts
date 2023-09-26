@@ -20,6 +20,10 @@ export class ElectrumApiMock implements ElectrumApiInterface {
         return this.isOpenFlag;
     }
 
+    async dump() {
+ 
+    }
+
     async resetConnection() {
         await this.open();
     }

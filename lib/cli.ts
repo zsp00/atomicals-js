@@ -951,7 +951,7 @@ program.command('get')
 
 program.command('global')
 .description('Get global status')
-.option('--hashes', 'How many atomicals block hashes to retrieve', '10')
+.option('--hashes <number>', 'How many atomicals block hashes to retrieve', '10')
 .action(async (options) => {
   try {
     await validateWalletStorage();
@@ -964,6 +964,20 @@ program.command('global')
     console.log(error);
   }
 });
+
+program.command('dump')
+.description('dump')
+.action(async (options) => {
+  try {
+    await validateWalletStorage();
+    const config: ConfigurationInterface = validateCliInputs();
+    const atomicals = new Atomicals(config, ElectrumApi.createClient(process.env.ELECTRUMX_WSS || ''));
+    const result = await atomicals.dump();
+    handleResultLogging(result);
+  } catch (error) {
+    console.log(error);
+  }
+}); 
 
 program.command('location')
   .description('Get locations of an Atomical')
@@ -1140,6 +1154,7 @@ program.command('mint-ft')
   .option('--init <string...>', 'Populate the \'init\' field with key value pairs or file contents')
   .option('--initialowner <string>', 'Initial owner wallet alias to mint the Atomical into')
   .option('--satsbyte <number>', 'Satoshis per byte in fees', '20')
+  .option('--funding <string>', 'Use wallet alias WIF key to be used for funding and change')
   .option('--bitworkc <string>', 'Whether to put any bitwork proof of work into the token mint. Applies to the commit transaction.')
   .option('--bitworkr <string>', 'Whether to put any bitwork proof of work into the token mint. Applies to the reveal transaction.')
   .option('--parent <string>', 'Whether to require a parent atomical to be spent along with the mint.')
@@ -1151,12 +1166,13 @@ program.command('mint-ft')
       const config: ConfigurationInterface = validateCliInputs();
       const requestTicker = ticker.toLowerCase();
       let parentOwnerRecord = resolveWalletAliasNew(walletInfo, options.parentowner, walletInfo.primary);
+      let fundingRecord = resolveWalletAliasNew(walletInfo, options.funding, walletInfo.funding);
       const atomicals = new Atomicals(config, ElectrumApi.createClient(process.env.ELECTRUMX_WSS || ''));
       let walletRecord = resolveWalletAliasNew(walletInfo, options.initialowner, walletInfo.primary);
       if (isNaN(supply)) {
         throw 'supply must be an integer';
       }
-      const result: any = await atomicals.mintFtInteractive(files, parseInt(supply), walletRecord.address, requestTicker, walletRecord.WIF, {
+      const result: any = await atomicals.mintFtInteractive(files, parseInt(supply), walletRecord.address, requestTicker, fundingRecord.WIF, {
         meta: options.meta,
         ctx: options.ctx,
         init: options.init,
@@ -1186,8 +1202,8 @@ program.command('init-dft')
   .option('--init <string...>', 'Populate the \'init\' field with key value pairs or file contents')
   .option('--funding <string>', 'Use wallet alias wif key to be used for funding and change')
   .option('--satsbyte <number>', 'Satoshis per byte in fees', '20')
-  .option('-m, --mintbitworkc <string>', 'Whether to require any bitwork proof of work to mint. Applies to the commit transaction.')
-  .option('-r, --mintbitworkr <string>', 'Whether to require any bitwork proof of work to mint. Applies to the reveal transaction.')
+  .option('--mintbitworkc <string>', 'Whether to require any bitwork proof of work to mint. Applies to the commit transaction.')
+  .option('--mintbitworkr <string>', 'Whether to require any bitwork proof of work to mint. Applies to the reveal transaction.')
   .option('--bitworkc <string>', 'Whether to put any bitwork proof of work into the token mint. Applies to the commit transaction.')
   .option('--bitworkr <string>', 'Whether to put any bitwork proof of work into the token mint. Applies to the reveal transaction.')
   .option('--parent <string>', 'Whether to require a parent atomical to be spent along with the mint.')
@@ -1201,8 +1217,9 @@ program.command('init-dft')
       const atomicals = new Atomicals(config, ElectrumApi.createClient(process.env.ELECTRUMX_WSS || ''));
       let walletRecord = resolveWalletAliasNew(walletInfo, options.funding, walletInfo.funding);
       let parentOwnerRecord = resolveWalletAliasNew(walletInfo, options.parentowner, walletInfo.primary);
-      console.log('options', options);
-      const result: any = await atomicals.initDftInteractive(files, walletRecord.address, requestTicker, mintAmount, maxMints, mintHeight, options.mintbitworkc, options.mintbitworkr, walletRecord.WIF, {
+      let fundingRecord = resolveWalletAliasNew(walletInfo, options.funding, walletInfo.funding);
+      const mintBitworkc = options.mintbitworkc ? options.mintbitworkc : getRandomBitwork4();
+      const result: any = await atomicals.initDftInteractive(files, walletRecord.address, requestTicker, mintAmount, maxMints, mintHeight, mintBitworkc, options.mintbitworkr, fundingRecord.WIF, {
         meta: options.meta,
         ctx: options.ctx,
         init: options.init,
@@ -1235,7 +1252,8 @@ program.command('mint-dft')
       ticker = ticker.toLowerCase();
       const atomicals = new Atomicals(config, ElectrumApi.createClient(process.env.ELECTRUMX_WSS || ''));
       let walletRecord = resolveWalletAliasNew(walletInfo, options.initialowner, walletInfo.primary);
-      const result: any = await atomicals.mintDftInteractive(walletRecord.address, ticker, walletRecord.WIF, {
+      let fundingRecord = resolveWalletAliasNew(walletInfo, options.funding, walletInfo.funding);
+      const result: any = await atomicals.mintDftInteractive(walletRecord.address, ticker, fundingRecord.WIF, {
         satsbyte: parseInt(options.satsbyte),
         disableMiningChalk: options.disablechalk
       });
@@ -1255,6 +1273,7 @@ program.command('mint-nft')
   .option('--initialowner <string>', 'Initial owner wallet alias to mint the Atomical into')
   .option('--satsbyte <number>', 'Satoshis per byte in fees', '20')
   .option('--satsoutput <number>', 'Satoshis to put into the minted atomical', '1000')
+  .option('--funding <string>', 'Use wallet alias WIF key to be used for funding and change')
   .option('--container <string>', 'Name of the container to request')
   .option('--bitworkc <string>', 'Whether to put any bitwork proof of work into the token mint. Applies to the commit transaction.')
   .option('--bitworkr <string>', 'Whether to put any bitwork proof of work into the token mint. Applies to the reveal transaction.')
@@ -1268,7 +1287,8 @@ program.command('mint-nft')
       const atomicals = new Atomicals(config, ElectrumApi.createClient(process.env.ELECTRUMX_WSS || ''));
       let walletRecord = resolveWalletAliasNew(walletInfo, options.initialowner, walletInfo.primary);
       let parentOwnerRecord = resolveWalletAliasNew(walletInfo, options.parentowner, walletInfo.primary);
-      const result: any = await atomicals.mintNftInteractive(files, walletRecord.address, walletRecord.WIF, {
+      let fundingRecord = resolveWalletAliasNew(walletInfo, options.funding, walletInfo.funding);
+      const result: any = await atomicals.mintNftInteractive(files, walletRecord.address, fundingRecord.WIF, {
         meta: options.meta,
         ctx: options.ctx,
         init: options.init,
@@ -1310,7 +1330,8 @@ program.command('mint-realm')
       const atomicals = new Atomicals(config, ElectrumApi.createClient(process.env.ELECTRUMX_WSS || ''));
       let walletRecord = resolveWalletAliasNew(walletInfo, options.initialowner, walletInfo.primary);
       let parentOwnerRecord = resolveWalletAliasNew(walletInfo, options.parentowner, walletInfo.primary);
-      const result: any = await atomicals.mintRealmInteractive(realm, walletRecord.address, walletRecord.WIF, {
+      let fundingRecord = resolveWalletAliasNew(walletInfo, options.funding, walletInfo.funding);
+      const result: any = await atomicals.mintRealmInteractive(realm, walletRecord.address, fundingRecord.WIF, {
         meta: options.meta,
         ctx: options.ctx,
         init: options.init,
@@ -1339,6 +1360,7 @@ program.command('mint-subrealm')
   .option('--initialowner <string>', 'Initial owner wallet alias to mint the Atomical into')
   .option('--satsbyte <number>', 'Satoshis per byte in fees', '20')
   .option('--satsoutput <number>', 'Satoshis to put into the minted atomical', '1000')
+  .option('--funding <string>', 'Use wallet alias WIF key to be used for funding and change')
   .option('--container <string>', 'Name of the container to request')
   .option('--bitworkc <string>', 'Whether to put any bitwork proof of work into the token mint. Applies to the commit transaction.')
   .option('--bitworkr <string>', 'Whether to put any bitwork proof of work into the token mint. Applies to the reveal transaction.')
@@ -1350,7 +1372,8 @@ program.command('mint-subrealm')
       const atomicals = new Atomicals(config, ElectrumApi.createClient(process.env.ELECTRUMX_WSS || ''));
       let walletRecord = resolveWalletAliasNew(walletInfo, options.initialowner, walletInfo.primary);
       let ownerWalletRecord = resolveWalletAliasNew(walletInfo, options.owner, walletInfo.primary);
-      const result: any = await atomicals.mintSubrealmInteractive(subrealm, walletRecord.address, walletRecord.WIF, ownerWalletRecord, {
+      let fundingRecord = resolveWalletAliasNew(walletInfo, options.funding, walletInfo.funding);
+      const result: any = await atomicals.mintSubrealmInteractive(subrealm, walletRecord.address, fundingRecord.WIF, ownerWalletRecord, {
         meta: options.meta,
         ctx: options.ctx,
         init: options.init,
@@ -1376,6 +1399,7 @@ program.command('mint-container')
   .option('--initialowner <string>', 'Initial owner wallet alias to mint the Atomical into')
   .option('--satsbyte <number>', 'Satoshis per byte in fees', '20')
   .option('--satsoutput <number>', 'Satoshis to put into the minted atomical', '1000')
+  .option('--funding <string>', 'Use wallet alias WIF key to be used for funding and change')
   .option('--container <string>', 'Name of the container to request to be a member of. Not to be confused with the \'mint-container\' command to create a new container')
   .option('--bitworkc <string>', 'Whether to put any bitwork proof of work into the token mint. Applies to the commit transaction.')
   .option('--bitworkr <string>', 'Whether to put any bitwork proof of work into the token mint. Applies to the reveal transaction.')
@@ -1389,7 +1413,8 @@ program.command('mint-container')
       const atomicals = new Atomicals(config, ElectrumApi.createClient(process.env.ELECTRUMX_WSS || ''));
       let walletRecord = resolveWalletAliasNew(walletInfo, options.initialowner, walletInfo.primary);
       let parentOwnerRecord = resolveWalletAliasNew(walletInfo, options.parentowner, walletInfo.primary);
-      const result: any = await atomicals.mintContainerInteractive(container, walletRecord.address, walletRecord.WIF, {
+      let fundingRecord = resolveWalletAliasNew(walletInfo, options.funding, walletInfo.funding);
+      const result: any = await atomicals.mintContainerInteractive(container, walletRecord.address, fundingRecord.WIF, {
         meta: options.meta,
         ctx: options.ctx,
         init: options.init,

@@ -511,6 +511,24 @@ export class Atomicals implements APIInterface {
     }
   }
 
+  async dump(keepElectrumAlive = false): Promise<CommandResultInterface> {
+    try {
+      await this.electrumApi.open();
+      let response = await this.electrumApi.dump();
+      return response;
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.toString(),
+        error
+      }
+    } finally {
+      if (!keepElectrumAlive) {
+        this.electrumApi.close();
+      }
+    }
+  }
+
   async resolveAtomical(atomicalIdOrNumberOrVariousName: string, atomicalsGetFetchType: AtomicalsGetFetchType, path = '/', verbose = false, keepElectrumAlive = false): Promise<CommandResultInterface> {
     try {
       await this.electrumApi.open();

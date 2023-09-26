@@ -33,6 +33,7 @@ export class MintInteractiveDftCommand implements CommandInterface {
       this.fundingWIF,
     );
     const keypair = getKeypairInfo(keypairRaw);
+    
     const filesData: any[] = await prepareArgsMetaCtx(
       {
         mint_ticker: this.ticker,
