@@ -951,13 +951,14 @@ program.command('get')
 
 program.command('global')
 .description('Get global status')
-.option('--verbose', 'Verbose output')
+.option('--hashes', 'How many atomicals block hashes to retrieve', '10')
 .action(async (options) => {
   try {
     await validateWalletStorage();
     const config: ConfigurationInterface = validateCliInputs();
+    const headersCount = parseInt(options.hashes, 10)
     const atomicals = new Atomicals(config, ElectrumApi.createClient(process.env.ELECTRUMX_WSS || ''));
-    const result = await atomicals.global();
+    const result = await atomicals.global(headersCount);
     handleResultLogging(result);
   } catch (error) {
     console.log(error);

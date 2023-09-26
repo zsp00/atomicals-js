@@ -192,9 +192,9 @@ export class ElectrumApi implements ElectrumApiInterface {
         return p;
     }
 
-    public async atomicalsGetGlobal(): Promise<any> {
+    public async atomicalsGetGlobal(hashes: number): Promise<any> {
         const p = new Promise((resolve, reject) => {
-            this.ws.call('blockchain.atomicals.get_global', [ true ]).then(function (result: any) {
+            this.ws.call('blockchain.atomicals.get_global', [ hashes ]).then(function (result: any) {
                 resolve(result);
             }).catch((error) => {
                 console.log('error ', error)

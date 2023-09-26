@@ -24,7 +24,7 @@ export class ElectrumApiMock implements ElectrumApiInterface {
         await this.open();
     }
 
-    async atomicalsGetGlobal() {
+    async atomicalsGetGlobal(hashes: number) {
        return null;
     }
 

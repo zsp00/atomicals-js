@@ -493,10 +493,10 @@ export class Atomicals implements APIInterface {
     }
   }
 
-  async global(keepElectrumAlive = false): Promise<CommandResultInterface> {
+  async global(hashes = 10, keepElectrumAlive = false): Promise<CommandResultInterface> {
     try {
       await this.electrumApi.open();
-      const command: CommandInterface = new GetGlobalCommand(this.electrumApi);
+      const command: CommandInterface = new GetGlobalCommand(this.electrumApi, hashes);
       return await command.run();
     } catch (error: any) {
       return {

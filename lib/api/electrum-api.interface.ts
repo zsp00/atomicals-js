@@ -21,7 +21,7 @@ export interface ElectrumApiInterface {
     broadcast: (rawtx: string) => Promise<any>;
     history: (scripthash: string) => Promise<any>;
     // Atomicals API
-    atomicalsGetGlobal: () => Promise<any>;
+    atomicalsGetGlobal: (hashes: number) => Promise<any>;
     atomicalsGet: (atomicalAliasOrId: string | number) => Promise<any>;
     atomicalsGetLocation: (atomicalAliasOrId: string | number) => Promise<any>;
     atomicalsGetState: (atomicalAliasOrId: string | number, path: string, verbose: boolean) => Promise<any>;
