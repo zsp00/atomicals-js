@@ -32,6 +32,8 @@ export class ElectrumApiMock implements ElectrumApiInterface {
        return null;
     }
 
+    
+
     setSendTransaction(cb: Function) {
         return this.sendTransactionCallback = cb;
     }
@@ -111,6 +113,10 @@ export class ElectrumApiMock implements ElectrumApiInterface {
     public async atomicalsGet(atomicalAliasOrId: string | number): Promise<any> {
         return "atomicalsGet"
     }
+    public async atomicalsGetDftInfo(atomicalAliasOrId: string | number): Promise<any> {
+        return "atomicalsGetDftInfo"
+    }
+    
     public async atomicalsGetLocation(atomicalAliasOrId: string | number): Promise<any> {
         return "atomicalsGetLocation"
     }

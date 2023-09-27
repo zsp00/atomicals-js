@@ -996,6 +996,21 @@ program.command('location')
     }
   });
 
+program.command('dftinfo')
+.description('Get dft info for an atomical')
+.argument('<atomicalAliasOrId>', 'string')
+.action(async (atomicalAliasOrId, options) => {
+  try {
+    await validateWalletStorage();
+    const config: ConfigurationInterface = validateCliInputs();
+    const atomicals = new Atomicals(config, ElectrumApi.createClient(process.env.ELECTRUMX_WSS || ''));
+    const result = await atomicals.getAtomicalDftInfo(atomicalAliasOrId);
+    handleResultLogging(result);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
 program.command('state')
   .description('Get the state of an Atomical')
   .argument('<atomicalAliasOrId>', 'string')

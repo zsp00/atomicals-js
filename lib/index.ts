@@ -62,13 +62,15 @@ import { DisableSubrealmRulesInteractiveCommand } from "./commands/disable-subre
 import { EnableSubrealmRulesCommand } from "./commands/enable-subrealm-rules-command";
 import { SplitInteractiveCommand } from "./commands/split-interactive-command";
 import { GetGlobalCommand } from "./commands/get-global-command";
+import { GetDftInfoCommand } from "./commands/get-dft-info-command";
 export { decorateAtomicals } from "./utils/atomical-format-helpers";
 export { addressToP2PKH } from "./utils/address-helpers";
 export { getExtendTaprootAddressKeypairPath } from "./utils/address-keypair-path";
 export { createKeyPair } from "./utils/create-key-pair";
-export { buildAtomicalsFileMapFromRawTx, hexifyObjectWithUtf8 } from "./utils/atomical-format-helpers";
+export { buildAtomicalsFileMapFromRawTx, hexifyObjectWithUtf8, isValidRealmName, isValidSubRealmName } from "./utils/atomical-format-helpers";
 export { createMnemonicPhrase } from "./utils/create-mnemonic-phrase";
 export { detectAddressTypeToScripthash, detectScriptToAddressType } from "./utils/address-helpers";
+
 export { bitcoin };
 export class Atomicals implements APIInterface {
   constructor(private config: ConfigurationInterface, private electrumApi: ElectrumApiInterface) {
@@ -569,6 +571,24 @@ export class Atomicals implements APIInterface {
     try {
       await this.electrumApi.open();
       const command: CommandInterface = new GetCommand(this.electrumApi, atomicalAliasOrId);
+      return await command.run();
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.toString(),
+        error
+      }
+    } finally {
+      if (!keepElectrumAlive) {
+        this.electrumApi.close();
+      }
+    }
+  }
+
+  async getAtomicalDftInfo(atomicalAliasOrId: string, keepElectrumAlive = false): Promise<CommandResultInterface> {
+    try {
+      await this.electrumApi.open();
+      const command: CommandInterface = new GetDftInfoCommand(this.electrumApi, atomicalAliasOrId);
       return await command.run();
     } catch (error: any) {
       return {

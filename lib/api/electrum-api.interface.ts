@@ -24,6 +24,7 @@ export interface ElectrumApiInterface {
     // Atomicals API
     atomicalsGetGlobal: (hashes: number) => Promise<any>;
     atomicalsGet: (atomicalAliasOrId: string | number) => Promise<any>;
+    atomicalsGetDftInfo: (atomicalAliasOrId: string | number) => Promise<any>;
     atomicalsGetLocation: (atomicalAliasOrId: string | number) => Promise<any>;
     atomicalsGetState: (atomicalAliasOrId: string | number, path: string, verbose: boolean) => Promise<any>;
     atomicalsGetStateHistory: (atomicalAliasOrId: string | number) => Promise<any>;

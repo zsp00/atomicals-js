@@ -194,7 +194,7 @@ export class ElectrumApi implements ElectrumApiInterface {
 
     public async dump(): Promise<any> {
         const p = new Promise((resolve, reject) => {
-            this.ws.call('blockchain.atomicals.dump_i', [ ]).then(function (result: any) {
+            this.ws.call('blockchain.atomicals.dump', [ ]).then(function (result: any) {
                 resolve(result);
             }).catch((error) => {
                 console.log('error ', error)
@@ -219,6 +219,18 @@ export class ElectrumApi implements ElectrumApiInterface {
     public async atomicalsGet(atomicalAliasOrId: string | number): Promise<any> {
         const p = new Promise((resolve, reject) => {
             this.ws.call('blockchain.atomicals.get', [atomicalAliasOrId]).then(function (result: any) {
+                resolve(result);
+            }).catch((error) => {
+                console.log('error ', error)
+                reject(error);
+            })
+        });
+        return p;
+    }
+
+    public async atomicalsGetDftInfo(atomicalAliasOrId: string | number): Promise<any> {
+        const p = new Promise((resolve, reject) => {
+            this.ws.call('blockchain.atomicals.get_dft_info', [atomicalAliasOrId]).then(function (result: any) {
                 resolve(result);
             }).catch((error) => {
                 console.log('error ', error)
