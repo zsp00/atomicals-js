@@ -82,6 +82,11 @@ export class TransferInteractiveNftCommand implements CommandInterface {
     if (!atomicalDecorated.location_info || !atomicalDecorated.location_info.length || atomicalDecorated.location_info[0].address !== p2tr.address) {
       throw `Atomical is controlled by a different address (${atomicalDecorated.location_info[0].address}) than the provided wallet (${p2tr.address})`;
     }
+
+    if (atomicalDecorated.location_info[0].atomicals.length > 1) {
+      throw `Multiple atomicals are located at the same address as the NFT. Use the splat command to seperate them first.`;
+    }
+
     const rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout
