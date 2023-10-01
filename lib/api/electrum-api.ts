@@ -228,9 +228,9 @@ export class ElectrumApi implements ElectrumApiInterface {
         return p;
     }
 
-    public async atomicalsGetDftInfo(atomicalAliasOrId: string | number): Promise<any> {
+    public async atomicalsGetFtInfo(atomicalAliasOrId: string | number): Promise<any> {
         const p = new Promise((resolve, reject) => {
-            this.ws.call('blockchain.atomicals.get_dft_info', [atomicalAliasOrId]).then(function (result: any) {
+            this.ws.call('blockchain.atomicals.get_ft_info', [atomicalAliasOrId]).then(function (result: any) {
                 resolve(result);
             }).catch((error) => {
                 console.log('error ', error)

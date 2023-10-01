@@ -62,7 +62,7 @@ import { DisableSubrealmRulesInteractiveCommand } from "./commands/disable-subre
 import { EnableSubrealmRulesCommand } from "./commands/enable-subrealm-rules-command";
 import { SplitInteractiveCommand } from "./commands/split-interactive-command";
 import { GetGlobalCommand } from "./commands/get-global-command";
-import { GetDftInfoCommand } from "./commands/get-dft-info-command";
+import { GetFtInfoCommand } from "./commands/get-dft-info-command";
 export { decorateAtomicals } from "./utils/atomical-format-helpers";
 export { addressToP2PKH } from "./utils/address-helpers";
 export { getExtendTaprootAddressKeypairPath } from "./utils/address-keypair-path";
@@ -585,10 +585,10 @@ export class Atomicals implements APIInterface {
     }
   }
 
-  async getAtomicalDftInfo(atomicalAliasOrId: string, keepElectrumAlive = false): Promise<CommandResultInterface> {
+  async getAtomicalFtInfo(atomicalAliasOrId: string, keepElectrumAlive = false): Promise<CommandResultInterface> {
     try {
       await this.electrumApi.open();
-      const command: CommandInterface = new GetDftInfoCommand(this.electrumApi, atomicalAliasOrId);
+      const command: CommandInterface = new GetFtInfoCommand(this.electrumApi, atomicalAliasOrId);
       return await command.run();
     } catch (error: any) {
       return {

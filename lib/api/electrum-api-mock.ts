@@ -113,8 +113,8 @@ export class ElectrumApiMock implements ElectrumApiInterface {
     public async atomicalsGet(atomicalAliasOrId: string | number): Promise<any> {
         return "atomicalsGet"
     }
-    public async atomicalsGetDftInfo(atomicalAliasOrId: string | number): Promise<any> {
-        return "atomicalsGetDftInfo"
+    public async atomicalsGetFtInfo(atomicalAliasOrId: string | number): Promise<any> {
+        return "atomicalsGetFtInfo"
     }
     
     public async atomicalsGetLocation(atomicalAliasOrId: string | number): Promise<any> {

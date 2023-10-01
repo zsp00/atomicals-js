@@ -996,15 +996,15 @@ program.command('location')
     }
   });
 
-program.command('dftinfo')
-.description('Get dft info for an atomical')
+program.command('ftinfo')
+.description('Get FT specific info for an FT atomical')
 .argument('<atomicalAliasOrId>', 'string')
 .action(async (atomicalAliasOrId, options) => {
   try {
     await validateWalletStorage();
     const config: ConfigurationInterface = validateCliInputs();
     const atomicals = new Atomicals(config, ElectrumApi.createClient(process.env.ELECTRUMX_WSS || ''));
-    const result = await atomicals.getAtomicalDftInfo(atomicalAliasOrId);
+    const result = await atomicals.getAtomicalFtInfo(atomicalAliasOrId);
     handleResultLogging(result);
   } catch (error) {
     console.log(error);
