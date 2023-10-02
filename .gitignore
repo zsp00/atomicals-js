@@ -12,6 +12,7 @@ payment_txs/
 download_txs/
 transfer_txs/
 wallet.json
+wallet.json.*
 keypairs.json
 owners.json 
 commit-command-output*.json
