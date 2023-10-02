@@ -22,8 +22,8 @@ import { IWalletRecord } from "./validate-wallet-storage";
 const ECPair: ECPairAPI = ECPairFactory(tinysecp);
 const DEFAULT_SATS_BYTE = 10;
 const DEFAULT_SATS_ATOMICAL_UTXO = 1000;
-const SEND_RETRY_SLEEP_SECONDS = 3;
-const SEND_RETRY_ATTEMPTS = 3;
+const SEND_RETRY_SLEEP_SECONDS = 10;
+const SEND_RETRY_ATTEMPTS = 10;
 const DUST_AMOUNT = 546;
 const BASE_BYTES = 10;
 const INPUT_BYTES_BASE = 148;
@@ -497,6 +497,7 @@ export class AtomicalOperationBuilder {
             copiedData['args']['time'] = unixtime; // placeholder for only estimating tx deposit fee size
             const fundingUtxo = await getFundingUtxo(this.options.electrumApi, fundingKeypair.address, fees.commitAndRevealFeePlusOutputs)
             printBitworkLog(this.bitworkInfoCommit as any, true);
+            this.options.electrumApi.close();
             do {
                 copiedData['args']['nonce'] = nonce;
                 if (noncesGenerated % 5000 == 0) {
