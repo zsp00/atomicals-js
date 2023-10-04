@@ -171,7 +171,7 @@ export class TransferInteractiveNftCommand implements CommandInterface {
       console.log(`WAITING UNTIL ${expectedSatoshisDeposit / 100000000} BTC RECEIVED AT ${keypairFundingInfo.address}`)
       console.log(`...`)
       console.log(`...`)
-      let utxo = await this.electrumApi.waitUntilUTXO(keypairFundingInfo.address, expectedSatoshisDeposit, 5, true);
+      let utxo = await this.electrumApi.waitUntilUTXO(keypairFundingInfo.address, expectedSatoshisDeposit, 5, false);
       console.log(`Detected UTXO (${utxo.txid}:${utxo.vout}) with value ${utxo.value} for funding the transfer operation...`);
       // Add the funding input
       psbt.addInput({
@@ -180,6 +180,15 @@ export class TransferInteractiveNftCommand implements CommandInterface {
         witnessUtxo: { value: utxo.value, script: keypairFundingInfo.output },
         tapInternalKey: keypairFundingInfo.childNodeXOnlyPubkey,
       })
+      const isMoreThanDustChangeRemaining = utxo.value - expectedSatoshisDeposit >= 546;
+      if (isMoreThanDustChangeRemaining) {
+        // Add change output
+        console.log(`Adding change output, remaining: ${utxo.value - expectedSatoshisDeposit}`)
+        psbt.addOutput({
+          value: utxo.value - expectedSatoshisDeposit,
+          address: keypairFundingInfo.address
+        })
+      }
     } else {
       logBanner(`DEPOSIT IS NOT REQUIRED SINCE THE ATOMICAL INPUT VALUE IS SUFFICIENT TO COVER THE FEE`);
     }
