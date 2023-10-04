@@ -162,44 +162,40 @@ export class TransferInteractiveNftCommand implements CommandInterface {
       tapInternalKey: keypairAtomical.childNodeXOnlyPubkey,
     })
     // There is a funding deficit
-    const requiresDeposit = expectedSatoshisDeposit > 0;
-    if (requiresDeposit) {
-      logBanner(`DEPOSIT ${expectedSatoshisDeposit / 100000000} BTC to ${keypairFundingInfo.address}`);
-      qrcode.generate(keypairFundingInfo.address, { small: false });
-      console.log(`...`)
-      console.log(`...`)
-      console.log(`WAITING UNTIL ${expectedSatoshisDeposit / 100000000} BTC RECEIVED AT ${keypairFundingInfo.address}`)
-      console.log(`...`)
-      console.log(`...`)
-      let utxo = await this.electrumApi.waitUntilUTXO(keypairFundingInfo.address, expectedSatoshisDeposit, 5, false);
-      console.log(`Detected UTXO (${utxo.txid}:${utxo.vout}) with value ${utxo.value} for funding the transfer operation...`);
-      // Add the funding input
-      psbt.addInput({
-        hash: utxo.txid,
-        index: utxo.outputIndex,
-        witnessUtxo: { value: utxo.value, script: keypairFundingInfo.output },
-        tapInternalKey: keypairFundingInfo.childNodeXOnlyPubkey,
-      })
-      const isMoreThanDustChangeRemaining = utxo.value - expectedSatoshisDeposit >= 546;
-      if (isMoreThanDustChangeRemaining) {
-        // Add change output
-        console.log(`Adding change output, remaining: ${utxo.value - expectedSatoshisDeposit}`)
-        psbt.addOutput({
-          value: utxo.value - expectedSatoshisDeposit,
-          address: keypairFundingInfo.address
-        })
-      }
-    } else {
-      logBanner(`DEPOSIT IS NOT REQUIRED SINCE THE ATOMICAL INPUT VALUE IS SUFFICIENT TO COVER THE FEE`);
-    }
+    // Could fund with the atomical input value, but we wont
+    // const requiresDeposit = expectedSatoshisDeposit > 0;
+  
+    logBanner(`DEPOSIT ${expectedSatoshisDeposit / 100000000} BTC to ${keypairFundingInfo.address}`);
+    qrcode.generate(keypairFundingInfo.address, { small: false });
+    console.log(`...`)
+    console.log(`...`)
+    console.log(`WAITING UNTIL ${expectedSatoshisDeposit / 100000000} BTC RECEIVED AT ${keypairFundingInfo.address}`)
+    console.log(`...`)
+    console.log(`...`)
+    let utxo = await this.electrumApi.waitUntilUTXO(keypairFundingInfo.address, expectedSatoshisDeposit, 5, false);
+    console.log(`Detected UTXO (${utxo.txid}:${utxo.vout}) with value ${utxo.value} for funding the transfer operation...`);
+    // Add the funding input
+    psbt.addInput({
+      hash: utxo.txid,
+      index: utxo.outputIndex,
+      witnessUtxo: { value: utxo.value, script: keypairFundingInfo.output },
+      tapInternalKey: keypairFundingInfo.childNodeXOnlyPubkey,
+    })
     psbt.addOutput({
       value: this.satsoutput,
       address: receiveAddress,
     })
-    psbt.signInput(0, keypairAtomical.tweakedChildNode)
-    if (requiresDeposit) {
-      psbt.signInput(1, keypairFundingInfo.tweakedChildNode)
+    const isMoreThanDustChangeRemaining = utxo.value - expectedSatoshisDeposit >= 546;
+    if (isMoreThanDustChangeRemaining) {
+      // Add change output
+      console.log(`Adding change output, remaining: ${utxo.value - expectedSatoshisDeposit}`)
+      psbt.addOutput({
+        value: utxo.value - expectedSatoshisDeposit,
+        address: keypairFundingInfo.address
+      })
     }
+    psbt.signInput(0, keypairAtomical.tweakedChildNode)
+    psbt.signInput(1, keypairFundingInfo.tweakedChildNode)
     psbt.finalizeAllInputs();
     const tx = psbt.extractTransaction();
     const rawtx = tx.toHex();
