@@ -303,9 +303,6 @@ export class AtomicalOperationBuilder {
     }
 
     getInit(): any {
-        if (!Array.isArray(this.init)) {
-            throw new Error('Init must be an array');
-        }
         return this.init;
     }
 
