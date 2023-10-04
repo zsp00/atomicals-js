@@ -133,7 +133,6 @@ export class ElectrumApi implements ElectrumApiInterface {
                 try {
                     const response: any = await this.getUnspentAddress(address);
                     const utxos = response.utxos;
-
                     for (const utxo of utxos) {
                         // Do not use utxos that have attached atomicals
                         if (hasAttachedAtomicals(utxo)) {
