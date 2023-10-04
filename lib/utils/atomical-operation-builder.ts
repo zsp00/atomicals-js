@@ -303,6 +303,9 @@ export class AtomicalOperationBuilder {
     }
 
     getInit(): any {
+        if (!Array.isArray(this.init)) {
+            throw new Error('Init must be an array');
+        }
         return this.init;
     }
 
@@ -429,9 +432,7 @@ export class AtomicalOperationBuilder {
 
         // If it's a container membership request, add it in
         if (this.containerMembership) {
-            copiedData['init'] = copiedData['init'] || {};
-            copiedData['init']['$path'] = '/relns';
-            copiedData['init']['^in'] = `#${this.containerMembership}`;
+            copiedData['in'] = `["#${this.containerMembership}"]`;
         }
 
         switch (this.requestNameType) {
