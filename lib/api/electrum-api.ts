@@ -104,7 +104,7 @@ export class ElectrumApi implements ElectrumApiInterface {
                         index: utxo.tx_pos,
                         vout: utxo.tx_pos,
                         value: utxo.value,
-                        //atomicals: utxo.atomicals,
+                        atomicals: utxo.atomicals,
                         //script: addressToP2PKH(address)
                     })
                 }
