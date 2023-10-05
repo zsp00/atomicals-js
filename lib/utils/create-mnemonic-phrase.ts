@@ -1,3 +1,4 @@
+window['Buffer'] = window['Buffer'] || Buffer;
 const bitcoin = require('bitcoinjs-lib');
 import * as ecc from 'tiny-secp256k1';
 bitcoin.initEccLib(ecc);
