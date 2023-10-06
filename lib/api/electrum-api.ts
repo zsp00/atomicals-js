@@ -8,7 +8,7 @@ import axios from 'axios';
 export class ElectrumApi implements ElectrumApiInterface {
     private isOpenFlag = false;
 
-    private constructor(private baseUrl: string) {
+    private constructor(private baseUrl: string, private usePost = true) {
         this.resetConnection();
     }
 
@@ -43,8 +43,13 @@ export class ElectrumApi implements ElectrumApiInterface {
     }
 
     public async call(method, params) {
-        const response = await axios.get(this.baseUrl + '/' + method + '?params=' + JSON.stringify(params));
-        return response.data.response;
+        if (this.usePost) {
+            const response = await axios.post(this.baseUrl + '/' + method, { params} );
+            return response.data.response;
+        } else {
+            const response = await axios.get(this.baseUrl + '/' + method + '?params=' + JSON.stringify(params));
+            return response.data.response;
+        }
     }
 
     public async sendTransaction(signedRawtx: string): Promise<any> {
@@ -120,7 +125,6 @@ export class ElectrumApi implements ElectrumApiInterface {
     async waitUntilUTXO(address: string, satoshis: number, intervalSeconds = 10, exactSatoshiAmount = false): Promise<any> {
 
         function hasAttachedAtomicals(utxo): any | null {
-            console.log(utxo)
             if (utxo && utxo.atomicals && utxo.atomicals.length) {
                 return true;
             }
