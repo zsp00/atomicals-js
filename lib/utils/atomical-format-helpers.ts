@@ -14,6 +14,7 @@ import { detectScriptToAddressType } from "./address-helpers";
 import { ATOMICALS_PROTOCOL_ENVELOPE_ID } from '../types/protocol-tags';
 import { BASE_REQUEST_OPTS_DEFAULTS, BaseRequestOptions } from '../interfaces/api.interface';
 import * as CrockfordBase32 from 'crockford-base32';
+import { fileWriter } from './file-utils';
 const mintnft = 'nft';
 const mintft = 'ft';
 const mintdft = 'dft';
@@ -154,14 +155,14 @@ export function parseAtomicalsDataDefinitionOperation(opType, script, n, hexify 
   catch (err) {
     throw 'parse_atomicals_mint_operation script error';
   }
-  console.log('decodeds', rawdata);
+  console.log('decoded', rawdata);
   let decoded = {}
   try {
     decoded = decodePayloadCBOR(rawdata, hexify, addUtf8);
   } catch (error) {
     console.log('Error for atomical CBOR parsing ', error);
+    throw error;
   }
-  console.log('decoded', decoded, rawdata);
   if (hexify) {
     rawdata = rawdata.toString('hex');
   }
