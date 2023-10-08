@@ -8,7 +8,7 @@ import {
 import { bitcoin } from '..';
 
 initEccLib(ecc);
-import * as cbor from 'cbor';
+import * as cbor from 'borc';
 import { AtomicalStatus, LocationInfo } from '../interfaces/atomical-status.interface';
 import { detectScriptToAddressType } from "./address-helpers";
 import { ATOMICALS_PROTOCOL_ENVELOPE_ID } from '../types/protocol-tags';
